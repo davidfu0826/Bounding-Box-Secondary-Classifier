@@ -1,0 +1,12 @@
+
+# Un-ignore cropped_images
+!/cropped_images/ 
+
+# Ignore subdirectory and all including directories and files to match pattern as valid for the next pattern
+/cropped_images/**
+
+!/results/
+/results/**
+
+!/weights/
+/weights/**
