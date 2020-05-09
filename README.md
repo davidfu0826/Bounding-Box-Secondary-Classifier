@@ -1,7 +1,9 @@
 # Bounding-Box-Secondary-Classifier
 
 ## About this repository
-This repository is used as a part of a semi-supervised training pipeline for object detection. Suppose you have bounding boxes (with or without labels) for an image and you want to determine the correct label for this bouding box, then this is a tool for you!
+This repository is used as a part of a semi-supervised training pipeline for **object detection** or **classification**. Suppose you have **large amount of unlabelled dataset** in addition to a small labelled dataset, this repository will help you make use of that large unlabelled dataset with self-training. You can view it as an EM-algorithm.
+
+*Note: Suppose you have decided to use semi-supervised training for object detection and you have a trained model which predicts inaccurate labels on your bounding boxes. Then this repository will help you correct the labels for each bouding box, which means that this is also a tool for you!*w
 
 ## Short description about Semi-supervised learning and usage of this repository
 Suppose you have a labeled dataset **A** and an unlabeled dataset **B**. 
