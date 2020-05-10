@@ -1,6 +1,7 @@
 import argparse
 import os
 import glob
+from pathlib import Path
 from random import shuffle
 from collections import Counter
 from typing import List, Dict, Tuple
@@ -206,6 +207,7 @@ if __name__ == "__main__":
     WEIGHTS_DIR = args.weights
     RESUME = args.resume
     
+    Path(WEIGHTS_DIR).mkdir(parents=True, exist_ok=True)
     if RESUME:
         state_dict = torch.load(os.path.join(WEIGHTS_DIR, "last.pt"))
         
