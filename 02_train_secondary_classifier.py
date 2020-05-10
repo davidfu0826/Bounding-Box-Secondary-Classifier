@@ -41,7 +41,7 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False):
     TEST = SIZE - TRAIN
  
     if self_training:
-        print("Using predictions on unlabelled data in train set!".rjust(40, "#").ljust(50, "#"))
+        print("Using predictions on unlabelled data in train set!".rjust(70, "#").ljust(90, "#"))
         secondary_img_path = glob.glob("data/secondary_dataset" + os.sep + "*/*.jpg")
         shuffle(secondary_img_path)
 
@@ -172,10 +172,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = "Trains a secondary model",
                                      formatter_class = argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-d", "--dataset-dir", type=str, default="labelled_images",
+    parser.add_argument("--dataset-dir", type=str, default="labelled_images",
                         help="path to directory with dataset according to: <dataset-dir>/<class>/<img>")
     
-    parser.add_argument("-b", "--batch-size", type=int, default=64,
+    parser.add_argument("--batch-size", type=int, default=64,
                         help="batch size used during training")
     
     parser.add_argument("--train-ratio", type=float, default=0.8,

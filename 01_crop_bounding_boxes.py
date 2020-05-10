@@ -108,10 +108,10 @@ if __name__ == "__main__":
     if os.path.isdir(args.save_path):
         shutil.rmtree(args.save_path)
     Path(args.save_path).mkdir(parents=True, exist_ok=True)
-    Path("results").mkdir(parents=True, exist_ok=True)
+    Path("data/results").mkdir(parents=True, exist_ok=True)
         
     # We need metadata for remembering which bounding boxes correspond to which original annotation
-    with open("results" + os.sep + "bbox_metadata.txt", "w") as f: 
+    with open("data/results" + os.sep + "bbox_metadata.txt", "w") as f: 
         crop_idx = 0
         for img_path in tqdm(img_paths):
             if os.path.isfile(img_path):

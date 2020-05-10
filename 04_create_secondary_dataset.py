@@ -9,7 +9,7 @@ from tqdm import tqdm
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Post-process prediction results and create dataset using unlabelled data",
                                      formatter_class = argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--results", type=str, default="results/secondary_predictions.txt",
+    parser.add_argument("--results", type=str, default="data/results/secondary_predictions.txt",
                         help="path to prediction results from secondary classifier.")
     parser.add_argument("--img-dir", type=str, default="data/unlabelled_images",
                         help="path to directory with unlabelled images")
@@ -42,6 +42,9 @@ if __name__ == "__main__":
             save_path = os.path.join("data/secondary_dataset", pred, filename)
             copyfile(img_path, save_path)
         
+    num_samples = 0
     for directory in os.listdir("data/secondary_dataset"):
         path = os.path.join("data/secondary_dataset", directory)
+        num_samples += len(os.listdir(path))
         print(f"{directory} - {len(os.listdir(path))}")
+    print(f"{num_samples} signs were identified above threshold =>{PROB_THRESHOLD}")

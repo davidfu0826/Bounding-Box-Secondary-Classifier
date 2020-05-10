@@ -64,7 +64,7 @@ def get_train_transforms(img_size: int) -> Compose:
     return Compose([
         RandomApply([
             ColorJitter(brightness=0.3, contrast=0.01, saturation=0.01, hue=0),
-            RandomAffine(0.2, translate=(0.05,0.05), scale=(0.05,0.05), shear=0.03, resample=2),
+            RandomAffine(0.1, translate=(0.04,0.04), scale=(0.04,0.04), shear=0.01, resample=2),
             #Grayscale(num_output_channels=3),
             #RandomCrop(30),
             RandomPerspective(0.1)

@@ -53,8 +53,8 @@ if __name__ == "__main__":
     transform = get_test_transforms(img_size)
     img_paths = get_image_paths(img_dir)
     
-    Path("results").mkdir(parents=True, exist_ok=True)
-    with open("results/secondary_predictions.txt", "w") as f:
+    Path("data/results").mkdir(parents=True, exist_ok=True)
+    with open("data/results/secondary_predictions.txt", "w") as f:
         for img_path in tqdm(img_paths):
             
             # Read image
