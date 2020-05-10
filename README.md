@@ -17,6 +17,8 @@ Suppose you have a labeled dataset **A** and an unlabeled dataset **B**.
 ## How to use
 You need to write a script to read you prediction output files and pass it the functions.
 
+**Be aware: Use a good test set in order to prevent overfitting!**
+
 **More update will come as this repository updates!**
 
 ## Ideas to implement
