@@ -42,6 +42,8 @@ if __name__ == "__main__":
                         help="number of classes")
     parser.add_argument("--weights", type=str, default="weights/best.pt",
                         help="path to weights file (.pt)")
+    parser.add_argument("--batch-size", type=int, default=32,
+                        help="batch size used for prediction")
 
     args = parser.parse_args()
     img_dir = args.img_dir
@@ -55,28 +57,39 @@ if __name__ == "__main__":
     transform = get_test_transforms(img_size)
     img_paths = get_image_paths(img_dir)
     
+    batch = list()
+    batch_counter = 0
     Path("data/results").mkdir(parents=True, exist_ok=True)
     with open("data/results/secondary_predictions.txt", "w") as f:
         for img_path in tqdm(img_paths):
             
-            
             # Read image
             img = Image.open(img_path)
-            
-            # Pre-processing
-            X = transform(img)
-            X = X.unsqueeze(0)
+            X = transform(img) # Pre-processing
             X = X.to(device)
             
-            # Inference
-            pred = model(X)
+            if batch_counter != args.batch_size:
+                X = X.unsqueeze(0)
+                batch.append(X)
+                batch_counter += 1
+            else:
+                batch_counter = 0
             
-            # Post-processing
-            pred = pred.cpu().detach()
-            pred_class_id = int(pred.argmax())
-            pred_class = idx_to_class[pred_class_id]
-            
-            probability = F.softmax(pred)[0][pred_class_id]
-            
-            # Write to file
-            f.write(f"{os.path.basename(img_path)} {pred_class} {probability}\n")
+                # Inference
+                preds = model(torch.cat(batch, 0))
+                
+                # Free memory
+                batch = list()
+                torch.cuda.empty_cache()
+
+                for pred in preds:
+
+                    # Post-processing
+                    pred = pred.cpu().detach()
+                    pred_class_id = int(pred.argmax())
+                    pred_class = idx_to_class[pred_class_id]
+                    
+                    probability = F.softmax(pred)[pred_class_id]
+                    
+                    # Write to file
+                    f.write(f"{os.path.basename(img_path)} {pred_class} {probability}\n")
