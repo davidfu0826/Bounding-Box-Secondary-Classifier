@@ -50,6 +50,8 @@ if __name__ == "__main__":
     weights_path = args.weights
     
     model, idx_to_class = get_inference_engine(weights_path, num_classes)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model.to(device)
     transform = get_test_transforms(img_size)
     img_paths = get_image_paths(img_dir)
     
@@ -57,17 +59,20 @@ if __name__ == "__main__":
     with open("data/results/secondary_predictions.txt", "w") as f:
         for img_path in tqdm(img_paths):
             
+            
             # Read image
             img = Image.open(img_path)
             
             # Pre-processing
             X = transform(img)
             X = X.unsqueeze(0)
+            X = X.to(device)
             
             # Inference
             pred = model(X)
             
             # Post-processing
+            pred = pred.cpu().detach()
             pred_class_id = int(pred.argmax())
             pred_class = idx_to_class[pred_class_id]
             
