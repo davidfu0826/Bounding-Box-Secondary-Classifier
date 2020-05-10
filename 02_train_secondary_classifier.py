@@ -20,14 +20,15 @@ from torchvision.datasets import ImageFolder
 from utils.models import get_model
 from utils.data import get_train_transforms, get_test_transforms, CustomImageDataset, undersample, oversample
 
-def get_dataset(image_folder: str, img_size: str, self_training: bool = False):
+def get_dataset(image_folder: str, img_size: str, self_training: bool = False, no_augmentation: bool = False):
     """Returns DataLoaders, class decoder and weights (for balancing dataset)
     which can be used for PyTorch model training. 
     
     Args:
-        image_folder:  Path to directory with <class>/<image> structure
-        img_size:      Size of images in training dataset
-        self_training: Turn on training with unlabelled dataset
+        image_folder:    Path to directory with <class>/<image> structure
+        img_size:        Size of images in training dataset
+        self_training:   Turn on training with unlabelled dataset
+        no_augmentation: Use no data augmentation if true
     """
 
     primary_img_paths = glob.glob(image_folder + os.sep + "*/*.jpg")
@@ -56,7 +57,10 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False):
     if self_training:
         TRAIN += len(secondary_img_path) # For display purpose
     
-    train_dataset = CustomImageDataset(train_img_paths, get_train_transforms(img_size))
+    if no_augmentation:
+        train_dataset = CustomImageDataset(train_img_paths, get_test_transforms(img_size))
+    else:
+        train_dataset = CustomImageDataset(train_img_paths, get_train_transforms(img_size))
     test_dataset = CustomImageDataset(test_img_paths, get_test_transforms(img_size))
     class_to_idx = train_dataset.class_to_idx
     
@@ -194,6 +198,9 @@ if __name__ == "__main__":
     parser.add_argument("--resume", action="store_true",
                         help="resume training")
     
+    parser.add_argument("--no-aug", action="store_true",
+                        help="use no data augmentation during training")
+    
     parser.add_argument("--self-training", action="store_true",
                         help="semi-supervised training (requires labelled unlabelled dataset)")
     
@@ -227,7 +234,7 @@ if __name__ == "__main__":
             else:
                 pass
             
-        train_dataloader, test_dataloader, class_to_idx, weights = get_dataset(image_folder, IMG_SIZE, self_training = args.self_training)
+        train_dataloader, test_dataloader, class_to_idx, weights = get_dataset(image_folder, IMG_SIZE, self_training=args.self_training, no_augmentation=args.no_aug)
     
     # Using gpu or not
     CUDA = "cuda" if torch.cuda.is_available() else "cpu"
