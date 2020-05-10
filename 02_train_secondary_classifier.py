@@ -286,7 +286,7 @@ if __name__ == "__main__":
             y = y.to(CUDA)
 
             preds = model(X)
-            predictions += list(np.array(preds.argmax(axis=1).cpu()))
+            predictions += list(preds.argmax(axis=1).cpu().detach().numpy())
             targets += list(np.array(y.cpu()))
             if epoch+1 == epochs:
                 images += list(np.array(X.cpu()))
