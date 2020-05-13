@@ -59,6 +59,7 @@ if __name__ == "__main__":
     
     batch = list()
     batch_counter = 0
+    batch_img_paths = list()
     Path("data/results").mkdir(parents=True, exist_ok=True)
     with open("data/results/secondary_predictions.txt", "w") as f:
         for img_path in tqdm(img_paths):
@@ -68,11 +69,12 @@ if __name__ == "__main__":
             X = transform(img) # Pre-processing
             X = X.to(device)
             
-            if batch_counter != args.batch_size:
-                X = X.unsqueeze(0)
-                batch.append(X)
-                batch_counter += 1
-            else:
+            X = X.unsqueeze(0)
+            batch.append(X)
+            batch_img_paths.append(img_path)
+            batch_counter += 1
+            
+            if batch_counter == args.batch_size - 1:
                 batch_counter = 0
             
                 # Inference
@@ -82,7 +84,7 @@ if __name__ == "__main__":
                 batch = list()
                 torch.cuda.empty_cache()
 
-                for pred in preds:
+                for i, pred in enumerate(preds):
 
                     # Post-processing
                     pred = pred.cpu().detach()
@@ -91,5 +93,7 @@ if __name__ == "__main__":
                     
                     probability = F.softmax(pred)[pred_class_id]
                     
+                    _img_path = batch_img_paths[i]
                     # Write to file
-                    f.write(f"{os.path.basename(img_path)} {pred_class} {probability}\n")
+                    f.write(f"{os.path.basename(_img_path)} {pred_class} {probability}\n")
+                batch_img_paths = list()

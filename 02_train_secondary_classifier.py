@@ -9,6 +9,7 @@ from typing import List, Dict, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, confusion_matrix
 from tqdm import tqdm
 import torch
@@ -34,6 +35,11 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False, n
     primary_img_paths = glob.glob(image_folder + os.sep + "*/*.jpg")
     primary_img_paths += glob.glob(image_folder + os.sep + "*/*.png")
     
+    y = [os.path.basename(os.path.dirname(path)) for path in primary_img_paths]
+
+    train_img_paths, test_img_paths, _, _ = train_test_split(primary_img_paths, y, 
+                                                             stratify = y, 
+                                                             test_size = 1 - TRAIN_RATIO)
     #primary_img_paths = undersample(primary_img_paths)
     
     SIZE = len(primary_img_paths)
@@ -47,11 +53,12 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False, n
         secondary_img_path = glob.glob("data/secondary_dataset" + os.sep + "*/*.jpg")
         shuffle(secondary_img_path)
 
-        train_img_paths = primary_img_paths[:TRAIN] + secondary_img_path
-    else:
-        train_img_paths = primary_img_paths[:TRAIN]
+        #train_img_paths = primary_img_paths[:TRAIN] + secondary_img_path
+        train_img_paths += secondary_img_path
+    #else:
+    #    train_img_paths = primary_img_paths[:TRAIN]
         
-    test_img_paths = primary_img_paths[TRAIN:]
+    #test_img_paths = primary_img_paths[TRAIN:]
     TRAIN = len(train_img_paths)  # For display purpose
     
     if self_training:
