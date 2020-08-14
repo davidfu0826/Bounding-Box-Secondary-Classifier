@@ -63,7 +63,8 @@ if __name__ == "__main__":
     Path("data/results").mkdir(parents=True, exist_ok=True)
     with open("data/results/secondary_predictions.txt", "w") as f:
         for img_path in tqdm(img_paths):
-            
+
+
             # Read image
             img = Image.open(img_path)
             X = transform(img) # Pre-processing
@@ -91,9 +92,29 @@ if __name__ == "__main__":
                     pred_class_id = int(pred.argmax())
                     pred_class = idx_to_class[pred_class_id]
                     
-                    probability = F.softmax(pred)[pred_class_id]
+                    probability = F.softmax(pred, dim=0)[pred_class_id]
                     
                     _img_path = batch_img_paths[i]
                     # Write to file
                     f.write(f"{os.path.basename(_img_path)} {pred_class} {probability}\n")
                 batch_img_paths = list()
+
+        # Last batch inference
+        preds = model(torch.cat(batch, 0))
+        
+        # Free memory
+        batch = list()
+        torch.cuda.empty_cache()
+
+        for i, pred in enumerate(preds):
+
+            # Post-processing
+            pred = pred.cpu().detach()
+            pred_class_id = int(pred.argmax())
+            pred_class = idx_to_class[pred_class_id]
+            
+            probability = F.softmax(pred, dim=0)[pred_class_id]
+            
+            _img_path = batch_img_paths[i]
+            # Write to file
+            f.write(f"{os.path.basename(_img_path)} {pred_class} {probability}\n")
