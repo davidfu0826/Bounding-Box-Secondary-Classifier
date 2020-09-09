@@ -77,6 +77,7 @@ class MainApplication(tk.Frame):
 
         
         # Select image files
+        img_paths = None
         def get_images():
             """#After clicking on 'Select images' button
                 #-> Find all images and corresponding labels
@@ -104,6 +105,7 @@ class MainApplication(tk.Frame):
         img_scrollb = tk.Scrollbar(parent, command=image_paths_box.yview)
         image_paths_box['yscrollcommand'] = img_scrollb.set
 
+        annot_paths = None
         def get_labels():
             """#After clicking on 'Select dataset' button
             #-> Find all images and corresponding labels
@@ -129,11 +131,16 @@ class MainApplication(tk.Frame):
         annot_scrollb = tk.Scrollbar(parent, command=annot_paths_box.yview)
         annot_paths_box['yscrollcommand'] = annot_scrollb.set
 
+        def crop_images():
+            unlabelled
+            annot_paths
+            img_paths
+            pass
         cropButton = tk.Button(parent, height=1, width=50, 
                                 text="Crop images", 
                                 command=lambda: crop_images())
         cropButton.grid(row=5, column=0, columnspan=10)
-        cropButton["state"] = "disabled"
+        #cropButton["state"] = "disabled"
         
         
 

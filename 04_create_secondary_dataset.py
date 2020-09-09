@@ -26,9 +26,9 @@ if __name__ == "__main__":
         
         # 0. framename 1. secondary prediction 2. probability
         predictions = [line.replace("\n", "").split(" ") for line in lines]
-       
-    labels = set([pred for _, pred, _ in predictions])
-    
+
+    labels = set([" ".join(pred[1:-1]) for pred in predictions])
+
     # Remove directory before creating the secondary dataset
     if os.path.isdir("data/secondary_dataset"):
         rmtree("data/secondary_dataset", ignore_errors=True)
@@ -36,7 +36,8 @@ if __name__ == "__main__":
     for label in labels:
         Path(f"data/secondary_dataset/{label}").mkdir(parents=True, exist_ok=True)
     
-    for filename, pred, probability in tqdm(predictions):
+    for pred in tqdm(predictions):
+        filename, pred, probability = pred[0], " ".join(pred[1:-1]), pred[-1]
         if float(probability) >= PROB_THRESHOLD:
             img_path = os.path.join(args.img_dir, filename)
             save_path = os.path.join("data/secondary_dataset", pred, filename)

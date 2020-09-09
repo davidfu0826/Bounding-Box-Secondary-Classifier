@@ -1,6 +1,7 @@
 import argparse
 import os
 import glob
+import random
 from pathlib import Path
 from random import shuffle
 from collections import Counter
@@ -18,8 +19,15 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision.datasets import ImageFolder
 
-from utils.models import get_model
+from utils.models import get_resnet18, get_efficientnetb0, get_ghostnet
 from utils.data import get_train_transforms, get_test_transforms, CustomImageDataset, undersample, oversample
+
+random.seed(1)
+np.random.seed(1)
+torch.manual_seed(1)
+torch.cuda.manual_seed(1)
+
+
 
 def get_dataset(image_folder: str, img_size: str, self_training: bool = False, no_augmentation: bool = False):
     """Returns DataLoaders, class decoder and weights (for balancing dataset)
@@ -64,35 +72,42 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False, n
     if self_training:
         TRAIN += len(secondary_img_path) # For display purpose
     
+    label_names = os.listdir(image_folder)
     if no_augmentation:
-        train_dataset = CustomImageDataset(train_img_paths, get_test_transforms(img_size))
+        train_dataset = CustomImageDataset(train_img_paths, get_test_transforms(img_size), label_names)
     else:
-        train_dataset = CustomImageDataset(train_img_paths, get_train_transforms(img_size))
-    test_dataset = CustomImageDataset(test_img_paths, get_test_transforms(img_size))
+        train_dataset = CustomImageDataset(train_img_paths, get_train_transforms(img_size), label_names)
+    test_dataset = CustomImageDataset(test_img_paths, get_test_transforms(img_size), label_names)
     class_to_idx = train_dataset.class_to_idx
     
     # Create DataLoader for training
     train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     test_dataloader  = DataLoader(test_dataset, batch_size=BATCH_SIZE)
-    weights = get_class_weights(train_img_paths, class_to_idx) # For balancing dataset using inverse-frequency
+    
+    
+    
+    weights = get_class_weights(train_img_paths, class_to_idx, label_names) # For balancing dataset using inverse-frequency
         
     print(f"Number of classes {NUM_CLASSES}, Train size: {TRAIN} images, Test size: {TEST} images, Batch size: {BATCH_SIZE}, Image size: {img_size}x{img_size}")
     return train_dataloader, test_dataloader, class_to_idx, weights
 
-def get_class_weights(img_paths: List[str], class_to_idx: Dict[str, int]):
+def get_class_weights(img_paths: List[str], class_to_idx: Dict[str, int], label_names: List[str]):
     """Helper function for calculating the weights
     for each class. This can be used for balancing imbalanced datasets.
     
     Args:
         img_paths:    List with paths to samples
         class_to_idx: Class encoder
+        label_names:  A list containing name of each class
     """
     labels = list()
     for img_path in img_paths:
         label = os.path.basename(os.path.dirname(img_path))
         labels.append(class_to_idx[label]) 
-    counts = Counter(labels)
+
+    counts = Counter(labels) + Counter([class_to_idx[name] for name in label_names])
     counts = np.array(sorted(counts.items()))[:,1]
+    
     return counts.max()/counts
     
 
@@ -215,7 +230,8 @@ if __name__ == "__main__":
     
     TRAIN_RATIO = args.train_ratio
     BATCH_SIZE = args.batch_size
-    NUM_CLASSES = 19
+    NUM_CLASSES = len(os.listdir(args.dataset_dir))
+    #print(NUM_CLASSES)
     IMG_SIZE = args.img_size
     epochs = args.epochs
     WEIGHTS_DIR = args.weights
@@ -248,7 +264,9 @@ if __name__ == "__main__":
     if CUDA == "cuda":
         print(f"Using GPU: {torch.cuda.get_device_name(0)}")
     
-    model = get_model(NUM_CLASSES)
+    model = get_efficientnetb0(NUM_CLASSES)
+    #model = get_resnet18(NUM_CLASSES)
+    #model = get_ghostnet(NUM_CLASSES)
     model.to(CUDA)
     print(list(class_to_idx.keys()))
     
@@ -281,9 +299,7 @@ if __name__ == "__main__":
             optimizer.zero_grad()
 
             preds = model(X)
-
             loss = criterion(preds, y)
-
             loss.backward()
             optimizer.step()
 

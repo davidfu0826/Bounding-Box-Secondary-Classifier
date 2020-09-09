@@ -10,7 +10,7 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from utils.models import get_model
+from utils.models import get_ghostnet, get_efficientnetb0
 from utils.data import get_test_transforms
 
 def get_image_paths(img_dir: str) -> List[str]:
@@ -22,7 +22,9 @@ def get_image_paths(img_dir: str) -> List[str]:
     return glob.glob(os.path.join(img_dir) + "/*.jpg")
 
 def get_inference_engine(weights_path, num_classes):
-    model = get_model(num_classes)
+    #model = get_ghostnet(num_classes)
+    model = get_efficientnetb0(num_classes)
+    #model = get_resnet18(num_classes)
     state_dict = torch.load(weights_path)
     model.load_state_dict(state_dict["model_state_dict"])
     model.eval()
