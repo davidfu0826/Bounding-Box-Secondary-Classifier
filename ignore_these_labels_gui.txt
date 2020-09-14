@@ -1,0 +1,14 @@
+horse
+dog
+cat
+bird
+traffic light
+boat
+truck
+train
+bus
+airplane
+motorbike
+car
+bicycle
+person

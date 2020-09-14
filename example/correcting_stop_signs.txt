@@ -1,0 +1,45 @@
+Example: 
+Correcting all labels of "STOP" in STS_COCO_dataset
+
+Description: 
+The object detection dataset 'STS COCO Dataset' contains 33 classes in Darknet format where images are
+
+	'<dataset_dir>/images/<batch_name>/*.jpg'
+
+and the labels are similarily
+	
+	'<dataset_dir>/labels/<batch_name>/*.txt'
+
+In this example we have one part containing the ground truth bounding boxes
+	'STS_COCO_dataset_v2/images/batch0/*.jpg'
+	'STS_COCO_dataset_v2/labels/batch0/*.txt'
+and another part containing the auto-labelled labels (some labels might be incorrect)
+	'STS_COCO_dataset_v2/images/unlabelled_sts/*.jpg'
+	'STS_COCO_dataset_v2/labels/unlabelled_sts/*.txt'
+
+This example corrects all the bounding boxes with the label "STOP" (because some are incorrect)
+
+1. We need to prepare two sets of data by cropping all the bounding boxes and save them into a folder.  
+
+First we crop the part that has the ground truth data 
+>> python 01_crop_bounding_boxes.py --img-dir C:/Users/Succe/Documents/Datasets/Swedish_Traffic_Signs/STS_COCO_dataset_v2_part1/STS_COCO_dataset_v2/images/batch0 --label-dir C:/Users/Succe/Documents/Datasets/Swedish_Traffic_Signs/STS_COCO_dataset_v2_part1/STS_COCO_dataset_v2/labels/batch0 --labelled-dataset --names-path "C:/Users/Succe/Downloads/STS_COCO.names"  --save-path "C:/Users/Succe/Documents/Github/Bounding-Box-Secondary-Classifier/data/ground_truths"
+
+Secondly, another containing the data with the incorrect data.
+>> python 01_crop_bounding_boxes.py --img-dir C:/Users/Succe/Documents/Datasets/Swedish_Traffic_Signs/STS_COCO_dataset_v2_part1/STS_COCO_dataset_v2/images/unlabelled_sts --label-dir C:/Users/Succe/Documents/Datasets/Swedish_Traffic_Signs/STS_COCO_dataset_v2_part1/STS_COCO_dataset_v2/labels/unlabelled_sts --labelled-dataset --names-path "C:/Users/Succe/Downloads/STS_COCO.names"  --save-path "C:/Users/Succe/Documents/Github/Bounding-Box-Secondary-Classifier/data/auto_labelled"
+
+
+2. Train a model on the cropped bounding boxes (ground truth)
+>> python 02_train_secondary_classifier.py --dataset-dir data\batch0 --epochs 10
+
+3. Use the trained model to auto-label to correct the specific label (by selecting the directory containing the bounding boxes)
+>> python 03_predict.py --weights weights\best.pt --img-dir data\unlabelled_sts\STOP --num-classes 33
+
+4. Inspect you results visually
+>> python 04_create_secondary_dataset.py --create-dataset --img-dir data\unlabelled_sts\STOP --threshold 0.95
+>> python 04_create_secondary_dataset.py --create-dataset --img-dir data\unlabelled_sts\STOP --threshold 0.95
+
+- Next, go to the folder './data/secondary_dataset' and inspect your results visually!
+
+- If content, go to next step or redo step 3 - 4! (model might have reached a bad minima)
+
+5. Transfer replace the new predictions with the old labels.

@@ -55,7 +55,8 @@ if __name__ == "__main__":
         
     class_to_idx = {label: idx for idx, label in enumerate(idx_to_class)}
     print(class_to_idx)
-
+    
+    counter = 0
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
     for img_filename in tqdm(os.listdir(args.img_dir)):
         
@@ -76,4 +77,8 @@ if __name__ == "__main__":
                     norm_center_y = abs(tl[1] + br[1])/(2*height)
                     norm_width = abs(tl[0] - br[0])/width
                     norm_height = abs(tl[1] - br[1])/height
-                    f.write(f"{class_idx} {norm_center_x} {norm_center_y} {norm_width} {norm_height}\n")
+                    
+                    if acc > 0.9 or (label == "car" and acc > 0.3):
+                        counter += 1
+                        f.write(f"{class_idx} {norm_center_x} {norm_center_y} {norm_width} {norm_height}\n")
+    print(f"We have {counter} bounding boxes.")

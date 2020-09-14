@@ -17,11 +17,11 @@ from imblearn.over_sampling import RandomOverSampler
 class CustomImageDataset(Dataset):
     """Custom Dataset for loading images from paths"""
 
-    def __init__(self, img_paths, transform=None):
+    def __init__(self, img_paths, transform=None, label_names=None):
     
         self.img_paths = img_paths
         self.y = [os.path.basename(os.path.dirname(img_path)) for img_path in self.img_paths]
-        self.class_to_idx = {label:idx for idx, label in enumerate(set(self.y))}
+        self.class_to_idx = {label:idx for idx, label in enumerate(label_names)}
         self.y = [self.class_to_idx[label] for label in self.y]
         
         self.transform = transform
