@@ -136,7 +136,7 @@ if __name__ == "__main__":
         annot_paths = get_label_paths(args.label_dir)
         
         if args.names_path is None and args.labelled_dataset:
-            print("Please enter path to names file (--annot-path <names of each class>).")
+            print("Please enter path to names file (--names-path <names of each class>).")
             exit(1)
    
         if args.labelled_dataset:
@@ -218,8 +218,10 @@ if __name__ == "__main__":
                                     filename = os.path.join(label, f"frame{index}.jpg")
                                     
                                 save_path = os.path.join(args.save_path, filename)
-                                
-                                success = cv2.imwrite(save_path, cropped_img)
+                                try:
+                                    success = cv2.imwrite(save_path, cropped_img)
+                                except:
+                                    print(f"{annot_paths[idx]} contains invalid data.")
                                 if not success:
                                     raise Exception()
                                 else:
