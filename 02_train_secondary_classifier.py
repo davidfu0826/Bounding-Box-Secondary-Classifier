@@ -29,7 +29,7 @@ torch.cuda.manual_seed(1)
 
 
 
-def get_dataset(image_folder: str, img_size: str, self_training: bool = False, no_augmentation: bool = False):
+def get_dataset(image_folder: str, img_size: str, self_training: bool = False, no_augmentation: bool = False, valid_dir: str = None):
     """Returns DataLoaders, class decoder and weights (for balancing dataset)
     which can be used for PyTorch model training. 
     
@@ -38,40 +38,47 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False, n
         img_size:        Size of images in training dataset
         self_training:   Turn on training with unlabelled dataset
         no_augmentation: Use no data augmentation if true
+        valid_dir:       (optional) Path to directory with validation dataset, see description for image_folder argument
     """
-
+    
     primary_img_paths = glob.glob(image_folder + os.sep + "*/*.jpg")
     primary_img_paths += glob.glob(image_folder + os.sep + "*/*.png")
-    
-    y = [os.path.basename(os.path.dirname(path)) for path in primary_img_paths]
-
-    train_img_paths, test_img_paths, _, _ = train_test_split(primary_img_paths, y, 
-                                                             stratify = y, 
-                                                             test_size = 1 - TRAIN_RATIO)
-    #primary_img_paths = undersample(primary_img_paths)
-    
-    SIZE = len(primary_img_paths)
-    shuffle(primary_img_paths)
+    if valid_dir is None:
         
-    TRAIN = int(SIZE*TRAIN_RATIO)
-    TEST = SIZE - TRAIN
- 
-    if self_training:
-        print("Using predictions on unlabelled data in train set!".rjust(70, "#").ljust(90, "#"))
-        secondary_img_path = glob.glob("data/secondary_dataset" + os.sep + "*/*.jpg")
-        shuffle(secondary_img_path)
+        y = [os.path.basename(os.path.dirname(path)) for path in primary_img_paths]
 
-        #train_img_paths = primary_img_paths[:TRAIN] + secondary_img_path
-        train_img_paths += secondary_img_path
-    #else:
-    #    train_img_paths = primary_img_paths[:TRAIN]
+        train_img_paths, test_img_paths, _, _ = train_test_split(primary_img_paths, y, 
+                                                                stratify = y, 
+                                                                test_size = 1 - TRAIN_RATIO)
+        #primary_img_paths = undersample(primary_img_paths)
         
-    #test_img_paths = primary_img_paths[TRAIN:]
-    TRAIN = len(train_img_paths)  # For display purpose
+        SIZE = len(primary_img_paths)
+        shuffle(primary_img_paths)
+            
+        TRAIN = int(SIZE*TRAIN_RATIO)
+        TEST = SIZE - TRAIN
     
-    if self_training:
-        TRAIN += len(secondary_img_path) # For display purpose
-    
+        if self_training:
+            print("Using predictions on unlabelled data in train set!".rjust(70, "#").ljust(90, "#"))
+            secondary_img_path = glob.glob("data/secondary_dataset" + os.sep + "*/*.jpg")
+            shuffle(secondary_img_path)
+
+            #train_img_paths = primary_img_paths[:TRAIN] + secondary_img_path
+            train_img_paths += secondary_img_path
+        #else:
+        #    train_img_paths = primary_img_paths[:TRAIN]
+            
+        #test_img_paths = primary_img_paths[TRAIN:]
+        TRAIN = len(train_img_paths)  # For display purpose
+        
+        if self_training:
+            TRAIN += len(secondary_img_path) # For display purpose
+    else:
+        train_img_paths = glob.glob(image_folder + os.sep + "*/*.jpg") + glob.glob(image_folder + os.sep + "*/*.png")
+        test_img_paths = glob.glob(valid_dir + os.sep + "*/*.jpg") + glob.glob(valid_dir + os.sep + "*/*.png")
+        TRAIN = len(train_img_paths)
+        TEST = len(test_img_paths)
+
     label_names = os.listdir(image_folder)
     if no_augmentation:
         train_dataset = CustomImageDataset(train_img_paths, get_test_transforms(img_size), label_names)
@@ -87,7 +94,8 @@ def get_dataset(image_folder: str, img_size: str, self_training: bool = False, n
     
     
     weights = get_class_weights(train_img_paths, class_to_idx, label_names) # For balancing dataset using inverse-frequency
-        
+    
+
     print(f"Number of classes {NUM_CLASSES}, Train size: {TRAIN} images, Test size: {TEST} images, Batch size: {BATCH_SIZE}, Image size: {img_size}x{img_size}")
     return train_dataloader, test_dataloader, class_to_idx, weights
 
@@ -225,7 +233,9 @@ if __name__ == "__main__":
     
     parser.add_argument("--self-training", action="store_true",
                         help="semi-supervised training (requires labelled unlabelled dataset)")
-    
+
+    parser.add_argument("--validation-dataset-dir", type=str, default="labelled_images",
+                        help="path to directory with dataset according to: <dataset-dir>/<class>/<img>") 
     args = parser.parse_args()
     
     TRAIN_RATIO = args.train_ratio
@@ -257,7 +267,7 @@ if __name__ == "__main__":
             else:
                 pass
             
-        train_dataloader, test_dataloader, class_to_idx, weights = get_dataset(image_folder, IMG_SIZE, self_training=args.self_training, no_augmentation=args.no_aug)
+        train_dataloader, test_dataloader, class_to_idx, weights = get_dataset(image_folder, IMG_SIZE, self_training=args.self_training, no_augmentation=args.no_aug, valid_dir=args.validation_dataset_dir)
     
     # Using gpu or not
     CUDA = "cuda" if torch.cuda.is_available() else "cpu"
